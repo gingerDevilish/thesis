@@ -1,0 +1,2 @@
+This model was similar to the previous one, with the only difference being a training dataset. From the remaining pool of images, we took 20k of occupied space images, and 40k of empty space images, that were the first alphabetically. The validation set remained the same as in the previous model. 
+This model also showed almost 99% of accuracy on validation, but during prediction, it worked much worse than the previous model, that became the reason this one was discarded.
