@@ -1,3 +1,0 @@
-This model was similar to the first one, with only difference in datasets. 
-This time, for training, we took four least recent dates from each weather from one parking, resulting in about 17k images, and for validation, four most recent dates from each weather from another parking, resulting in about 26k images.
-As a result of training, the model showed around 96% accuracy on validation.

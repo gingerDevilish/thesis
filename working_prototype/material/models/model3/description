@@ -1,3 +1,0 @@
-This model was done a bit differently from previous two, as it came out that training the network on parking space pictures led to poor results of prediction using parking space pictures we extracted in our prototype, since they were pretty much different.
-Thus this model was trained on our own data, that was previously extracted into two folders(for empty and occupied spaces) and ordered alphabetically. Then, for the training set,, we chose (moved) first 10k images from each category, using a simple bash command. By the same principle, we chose validation images, with 70k images in each category.
-The model trained showed almost 99% accuracy on validation, according to keras report.
