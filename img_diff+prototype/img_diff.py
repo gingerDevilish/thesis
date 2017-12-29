@@ -21,6 +21,7 @@ class PicLabeler:
         with open('model.json', 'r') as f:
             self.model = model_from_json(f.read())
         self.model.load_weights('first_try.h5')
+        self.mask = np.zeros(len(self.slots))
         
     def run(self):
         self.pts2 = np.float32([[0,60],[0,0],[40,0],[40,60]])
@@ -33,6 +34,15 @@ class PicLabeler:
             slots.append(slot)
             coord.append(icoord)
         
+        # TODO
+        # for each parking space (enumerate as we need index) (coord)
+        # for each change
+        # calculate IoU (need IoU function)
+        # IoU needs two arrays of coordinates
+        # if IoU > 0.1 assign mask value 1 and skip further
+
+        #retrieve only slots and ids that have mask value 1.
+
         return self.predict(slots, ids)
         # !!! ensure outside: answer saved to JSON, labeled image saved
             # draw bounding quadrilaterals 
@@ -47,6 +57,18 @@ class PicLabeler:
         ## save labeled image        
         #cv2.imwrite('%s_marked.jpg'%(name_stub), image)
 
+    def iou(self, fig1, fig2):
+        max_x = max(fig1[:,0].tolist()+fig2[:,0].tolist())
+        max_y = max(fig1[:,1].tolist()+fig2[:,1].tolist())
+        canvas = np.zeros((max_x+1, max_y+1), dtype=np.uint8)
+        shape1 = np.copy(canvas)
+        cv2.fillConvexPoly(shape1, fig1, 255)
+        shape2 = np.copy(canvas)
+        cv2.fillConvexPoly(shape2, fig2, 255)
+        intersect = cv2.bitwise_and(shape1, shape2)
+        union = cv2.bitwise_or(shape1, shape2)
+        iou = float(cv2.countNonZero(intersect))/cv.countNonZero(union)
+        return iou
         
     def preprocess_coords(self, xs, ys):
         distances = []
