@@ -21,6 +21,7 @@ class PicLabeler:
         with open('model.json', 'r') as f:
             self.model = model_from_json(f.read())
         self.model.load_weights('first_try.h5')
+        self.mask = np.zeros(len(self.slots))
         
     def run(self):
         self.pts2 = np.float32([[0,60],[0,0],[40,0],[40,60]])
@@ -28,24 +29,53 @@ class PicLabeler:
         ids = [] # list of slot ids
         coord=[] # list of slot coordinates
         for index, space in enumerate(self.slots):
-            ids.append(index+1)
             slot, icoord = self.process_slot(space)
-            slots.append(slot)
-            coord.append(icoord)
-        
+            for change in self.changes:
+                points = [list(change[0]), [change[1][0], change[0][1]], list(change[1]), [change[0][0], change[1][1]]] #It works, but it shold be simplyfied
+                if self.iou(np.asarray(space), np.asarray(points)) > 0.1:
+                    index+=1 # index or index+1?
+                    ids.append(index)
+                    slots.append(slot)
+                    coord.append(icoord)
+                    print("Slot  %d was changed" % index)
         return self.predict(slots, ids)
         # !!! ensure outside: answer saved to JSON, labeled image saved
             # draw bounding quadrilaterals 
             #pts = np.array(coord[i], np.int32).reshape((-1, 1, 2))
             #color = (0, 255, 0) if pred[i] else (255, 0, 0)
             #cv2.polylines(image,[pts],True,color)
-         
+    
+    
+       
         ##SAVE_RESULT
         ## save answer to JSON    
         #with open('%s.json' % (name_stub), 'w') as f:
         #    f.write(json.dumps(answer))
         ## save labeled image        
         #cv2.imwrite('%s_marked.jpg'%(name_stub), image)
+
+
+    def iou(self, fig1, fig2):
+            #print("Fig 1 "+str(type(fig1)))    
+            #print(fig1)
+            #print("Fig 2 "+str(type(fig2))) 
+            #print(fig2)
+            max_x = max(fig1[:,0].tolist()+fig2[:,0].tolist())
+            max_y = max(fig1[:,1].tolist()+fig2[:,1].tolist())
+            canvas = np.zeros((max_x+1, max_y+1), dtype=np.uint8)
+            shape1 = np.copy(canvas)
+            cv2.fillConvexPoly(shape1, fig1, 255)
+            shape2 = np.copy(canvas)
+            cv2.fillConvexPoly(shape2, fig2, 255)
+            intersect = cv2.countNonZero(cv2.bitwise_and(shape1, shape2))
+            union = cv2.countNonZero(cv2.bitwise_or(shape1, shape2))
+            iou=0
+            if union>0 and intersect>0:
+                iou = float(intersect/union)
+                print("intersect = %d"% intersect)
+                print("union = %d"% union)
+                print("iou answer: %0.5f" % iou)
+            return iou
 
         
     def preprocess_coords(self, xs, ys):
@@ -64,7 +94,7 @@ class PicLabeler:
         pred = self.model.predict(np.array(slots), 16, 1)
         # a dictionary for results of prediction
         answer = {}
-          
+        print("Num of slots %d, num of ids %d"%(len(slots), len(ids)))  
         # construct a JSON entity with results
         pred = pred.ravel().tolist()
         for i in range(len(ids)):
@@ -94,7 +124,7 @@ class PicLabeler:
 
 ## load the two input images
 imageA = cv2.imread('2.jpg', 0)
-imageB = cv2.imread('4.jpg', 0)
+imageB = cv2.imread('3.jpg', 0)
 config=json.load(open('conf.json'))
 old_answer=json.load(open('old.json'))
 
@@ -125,9 +155,8 @@ for c in cnts:
 	(x, y, w, h) = cv2.boundingRect(c)
 	if w>10 and h>10:
 	    rect.append(((x, y),(x + w, y + h)))
-	    #if you want see difference between two images uncomment two lines below
 	    #cv2.rectangle(imageA, (x, y), (x + w, y + h), (0, 0, 255), 2)
-	    #cv2.rectangle(imageB, (x, y), (x + w, y + h), (0, 0, 255), 2)
+	    cv2.rectangle(imageB, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
 # show the output images
 #cv2.imwrite("Original.jpg", imageA)
