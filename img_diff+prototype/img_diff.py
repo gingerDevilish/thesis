@@ -21,22 +21,24 @@ class PicLabeler:
         with open('model.json', 'r') as f:
             self.model = model_from_json(f.read())
         self.model.load_weights('first_try.h5')
-        self.mask = np.zeros(len(self.slots))
+        self.mask = np.zeros(len(self.slots)) # will bw used instead ids and so on in run method
         
     def run(self):
         self.pts2 = np.float32([[0,60],[0,0],[40,0],[40,60]])
         slots = [] # list of preprocessed slot images
         ids = [] # list of slot ids
-        coord=[] # list of slot coordinates
+        coord=[] # list of slot coordinates, do we really need this?
         for index, space in enumerate(self.slots):
-            slot, icoord = self.process_slot(space)
             for change in self.changes:
                 points = [list(change[0]), [change[1][0], change[0][1]], list(change[1]), [change[0][0], change[1][1]]] #It works, but it shold be simplyfied
                 if self.iou(np.asarray(space), np.asarray(points)) > 0.1:
-                    ids.append(index+1)
+                    slot, icoord = self.process_slot(space)
+                    ids.append(index+1) # it's better to put index here and index+1 outside
                     slots.append(slot)
                     coord.append(icoord)
                     print("Slot  %d was changed" % index)
+                    break
+        print(ids) 
         return self.predict(slots, ids)
         # !!! ensure outside: answer saved to JSON, labeled image saved
             # draw bounding quadrilaterals 
@@ -63,13 +65,18 @@ class PicLabeler:
             max_y = max(fig1[:,1].tolist()+fig2[:,1].tolist())
             canvas = np.zeros((max_x+1, max_y+1), dtype=np.uint8)
             shape1 = np.copy(canvas)
-            cv2.fillConvexPoly(shape1, fig1, 255)
+            shape1=cv2.fillConvexPoly(shape1, np.int32([fig1]), 255) #some bugs here and at some time this functions do not fill the polygon at all
             shape2 = np.copy(canvas)
-            cv2.fillConvexPoly(shape2, fig2, 255)
+            shape2=cv2.fillConvexPoly(shape2, np.int32([fig2]), 255) # same as in previous case
             intersect = cv2.countNonZero(cv2.bitwise_and(shape1, shape2))
             union = cv2.countNonZero(cv2.bitwise_or(shape1, shape2))
+            #print("Count non zero")
+            #print(cv2.countNonZero(shape1))
+            #print(cv2.countNonZero(shape2))
             iou=0
-            if union>0 and intersect>0:
+            #assert union!=0
+            if intersect>0 and union>0:
+                
                 iou = float(intersect)/union
                 print("intersect = %d"% intersect)
                 print("union = %d"% union)
