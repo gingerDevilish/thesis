@@ -33,8 +33,7 @@ class PicLabeler:
             for change in self.changes:
                 points = [list(change[0]), [change[1][0], change[0][1]], list(change[1]), [change[0][0], change[1][1]]] #It works, but it shold be simplyfied
                 if self.iou(np.asarray(space), np.asarray(points)) > 0.1:
-                    index+=1 # index or index+1?
-                    ids.append(index)
+                    ids.append(index+1)
                     slots.append(slot)
                     coord.append(icoord)
                     print("Slot  %d was changed" % index)
@@ -71,7 +70,7 @@ class PicLabeler:
             union = cv2.countNonZero(cv2.bitwise_or(shape1, shape2))
             iou=0
             if union>0 and intersect>0:
-                iou = float(intersect/union)
+                iou = float(intersect)/union
                 print("intersect = %d"% intersect)
                 print("union = %d"% union)
                 print("iou answer: %0.5f" % iou)
