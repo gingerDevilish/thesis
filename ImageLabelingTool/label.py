@@ -31,7 +31,7 @@ class PolygonDrawer(object):
             self.Polypoints.append((x, y))
         elif event == cv2.EVENT_RBUTTONDOWN:
         # Right click means deleting last point
-            del self.Polypoints[-1]
+            self.Polypoints = self.Polypoints[:-1]
             print("Removing point #%d" % (len(self.Polypoints)))
         elif event == cv2.EVENT_LBUTTONDBLCLK:
             # Left double click means we're done with polygon
@@ -44,7 +44,8 @@ class PolygonDrawer(object):
         self.polydone = False
         self.Polypoints = []
         # Let's create our working window and set a mouse callback to handle events
-        cv2.namedWindow(self.window_name, flags=cv2.WINDOW_AUTOSIZE)
+        GUI_NORMAL = 16 # workaround to properly disable a context menu on right button click
+        cv2.namedWindow(self.window_name, flags=(cv2.WINDOW_NORMAL|GUI_NORMAL))
         cv2.imshow(self.window_name, self.img)
         cv2.setMouseCallback(self.window_name, self.on_mouse)
 

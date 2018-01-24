@@ -10,6 +10,7 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Activation, Dropout, Flatten, Dense
 from keras.models import model_from_json
 from skimage.measure import compare_ssim
+from skimage.draw import polygon
 import argparse
 import imutils
 
@@ -65,9 +66,9 @@ class PicLabeler:
             max_y = max(fig1[:,1].tolist()+fig2[:,1].tolist())
             canvas = np.zeros((max_x+1, max_y+1), dtype=np.uint8)
             shape1 = np.copy(canvas)
-            shape1=cv2.fillConvexPoly(shape1, np.int32([fig1]), 255) #some bugs here and at some time this functions do not fill the polygon at all
+            shape1[polygon(fig1[:,0], fig1[:,1])]=1 #some bugs here and at some time this functions do not fill the polygon at all
             shape2 = np.copy(canvas)
-            shape2=cv2.fillConvexPoly(shape2, np.int32([fig2]), 255) # same as in previous case
+            shape2[polygon(fig2[:,0], fig2[:,1])]=1 # same as in previous case
             intersect = cv2.countNonZero(cv2.bitwise_and(shape1, shape2))
             union = cv2.countNonZero(cv2.bitwise_or(shape1, shape2))
             #print("Count non zero")
@@ -129,16 +130,16 @@ class PicLabeler:
 
 
 ## load the two input images
-imageA = cv2.imread('2.jpg', 0)
-imageB = cv2.imread('3.jpg', 0)
+imageA = cv2.imread('6.jpg', 0)
+imageB = cv2.imread('0.jpg', 0)
 config=json.load(open('conf.json'))
 old_answer=json.load(open('old.json'))
 
 # convert the images to grayscale
-grayA=cv2.medianBlur(imageA,5)
-grayB=cv2.medianBlur(imageB,5)
-grayA = cv2.GaussianBlur(grayA,(7,7),0)
-grayB = cv2.GaussianBlur(grayB,(7,7),0)
+grayA=cv2.medianBlur(imageA,7)
+grayB=cv2.medianBlur(imageB,7)
+grayA = cv2.GaussianBlur(grayA,(13,13),0)
+grayB = cv2.GaussianBlur(grayB,(13,13),0)
 
 rect=[]
 # compute the Structural Similarity Index (SSIM) between the two
@@ -161,7 +162,7 @@ for c in cnts:
 	(x, y, w, h) = cv2.boundingRect(c)
 	if w>10 and h>10:
 	    rect.append(((x, y),(x + w, y + h)))
-	    #cv2.rectangle(imageA, (x, y), (x + w, y + h), (0, 0, 255), 2)
+	    cv2.rectangle(imageA, (x, y), (x + w, y + h), (0, 0, 255), 2)
 	    cv2.rectangle(imageB, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
 # show the output images
@@ -183,10 +184,14 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 for k, v in old_answer.items():
     new_answer[int(k)] = answer.get(int(k), v)
     pts = np.array(config[int(k)-1], np.int32).reshape((-1, 1, 2))
+    color = (0, 255, 0) if old_answer[k]=='Occupied' else (255, 0, 0)
+    cv2.polylines(imageA, [pts], True, color)
+    cv2.putText(imageA, k, tuple(pts[0][0]), font, 0.4, color, 1, cv2.LINE_AA)
     color = (0, 255, 0) if new_answer[int(k)]=='Occupied' else (255, 0, 0)
     cv2.polylines(imageB, [pts], True, color)
     cv2.putText(imageB, k, tuple(pts[0][0]), font, 0.4, color, 1, cv2.LINE_AA)
     
 with open('new_pred.json', 'w') as f:
     f.write(json.dumps(new_answer))
+cv2.imwrite('imageA_marked.jpg', imageA)
 cv2.imwrite('imageB_marked.jpg', imageB)
