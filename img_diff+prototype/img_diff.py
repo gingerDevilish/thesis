@@ -131,10 +131,10 @@ class PicLabeler:
 
 ## load the two input images
 imageA = cv2.imread('6.jpg', 0)
-imageB = cv2.imread('0.jpg', 0)
+imageB = cv2.imread('1.jpg', 0)
 config=json.load(open('conf.json'))
 old_answer=json.load(open('old.json'))
-
+height, width = imageA.shape
 # convert the images to grayscale
 grayA=cv2.medianBlur(imageA,7)
 grayB=cv2.medianBlur(imageB,7)
@@ -154,17 +154,32 @@ thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 cnts = cnts[0] if imutils.is_cv2() else cnts[1]
 
+canvas = np.zeros((height+1, width+1), dtype=np.uint8)
+canvasM = np.zeros((height+1, width+1), dtype=np.uint8)
+cer=[]
 # loop over the contours
 for c in cnts:
 	# compute the bounding box of the contour and then draw the
 	# bounding box on both input images to represent where the two
 	# images differ
 	(x, y, w, h) = cv2.boundingRect(c)
-	if w>10 and h>10:
+	if w>20 and h>20:
+	    cv2.rectangle(canvasM, (x, y), (x + w, y + h), 255, -1)
 	    rect.append(((x, y),(x + w, y + h)))
-	    cv2.rectangle(imageA, (x, y), (x + w, y + h), (0, 0, 255), 2)
-	    cv2.rectangle(imageB, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
+
+cnt = cv2.findContours(canvasM, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+for a in cnt[1]:
+    (x, y, w, h) = cv2.boundingRect(a)
+    cer.append(((x, y),(x + w, y + h)))
+    cv2.rectangle(canvasM, (x, y), (x + w, y + h), 255, -1)
+    cv2.rectangle(imageA, (x, y), (x + w, y + h), (0, 0, 255), 2)
+    cv2.rectangle(imageB, (x, y), (x + w, y + h), (0, 0, 255), 2)
+print("cer")
+print(len(rect))
+print(len(cer))
+print(cer)    
 # show the output images
 #cv2.imwrite("Original.jpg", imageA)
 #cv2.imwrite("Modified.jpg", imageB)
@@ -172,8 +187,8 @@ for c in cnts:
 #cv2.imwrite("Thresh.jpg", thresh)
 #with open('diff_coords.json', 'w') as f:
 #    f.write(json.dumps(rect))
-    
-labeler = PicLabeler(imageB, config, rect)
+cv2.imwrite('canva.jpg', canvasM)    
+labeler = PicLabeler(imageB, config, cer)
 answer = labeler.run()
 new_answer = {}
 font = cv2.FONT_HERSHEY_SIMPLEX

@@ -9,12 +9,15 @@ FINAL_LINE_COLOR = (0, 255, 0)
 # ============================================================================
 
 class PolygonDrawer(object):
-    def __init__(self, window_name, pic):
+    def __init__(self, window_name, pic, polygons):
         self.window_name = window_name # Name for our window
         self.polydone = False
+        self.dump = False
         self.current = (0, 0) # Current position, so we can draw the line-in-progress
         self.Polypoints = [] # List of points defining our polygon
-        self.img=pic
+        self.img=pic.copy()
+        self.orig=pic.copy()
+        self.polygons=polygons
         
     def on_mouse(self, event, x, y, buttons, user_param):
         # Mouse callback that gets called for every mouse event (i.e. moving, clicking, etc.)
@@ -33,6 +36,12 @@ class PolygonDrawer(object):
         # Right click means deleting last point
             self.Polypoints = self.Polypoints[:-1]
             print("Removing point #%d" % (len(self.Polypoints)))
+            #img=original for each polygone in polygons draw a polygon on img
+            #tut ne pererisovivaet
+            self.img=self.orig.copy()
+            for poly in self.polygons:
+                cv2.fillPoly(self.img, np.array([poly]), FINAL_LINE_COLOR) 
+            cv2.polylines(self.img, np.array([self.Polypoints]), False, FINAL_LINE_COLOR, 1)
         elif event == cv2.EVENT_LBUTTONDBLCLK:
             # Left double click means we're done with polygon
             print("Completing polygon with %d points." % len(self.Polypoints))
@@ -40,7 +49,7 @@ class PolygonDrawer(object):
             
 
 
-    def run(self):
+    def drawPoly(self):
         self.polydone = False
         self.Polypoints = []
         # Let's create our working window and set a mouse callback to handle events
@@ -70,25 +79,37 @@ class PolygonDrawer(object):
         cv2.imshow(self.window_name, self.img)
         # Waiting for the user to press any key
 
-        return self.img,  self.Polypoints
+    
+    def run(self):
+        i=0
+        while(not self.dump):
+            self.drawPoly()
+            self.polygons.append(self.Polypoints)
+            print("polygon #%d finished"%i)
+            #if(s pressed) dump=true
+            #tut padaet
+            rval=cv2.waitKey(1000) #needs be fixed
+            if (rval==ord('s')):
+                self.dump=True
+            elif(rval==ord('z')):
+                self.polygons = self.polygons[:-1]
+                self.img=self.orig.copy()
+                for poly in self.polygons:
+                    cv2.fillPoly(self.img, np.array([poly]), FINAL_LINE_COLOR)
+        return self.polygons
 
 # ============================================================================
 
 if __name__ == "__main__":
-
+    img=cv2.imread('1.jpg', 1)
     polygons=[]
-    pd = PolygonDrawer("Polygon", cv2.imread('1.jpg', 1))
-    i=0
-    try:
-        while(True):
-            image, p = pd.run()
-            polygons.append(p)
-            print("polygon #%d finished"%i)
-            i+=1
-    except KeyboardInterrupt:
-        pass
+    pd = PolygonDrawer("Polygon", img, polygons)
+    pd.run()
+    
     cv2.destroyWindow(pd.window_name)
-    cv2.imwrite("polygon.png", image)
+    for poly in polygons:
+        cv2.fillPoly(img, np.array([poly]), FINAL_LINE_COLOR)
+    cv2.imwrite("polygon.png", img)
     with open('coords.json', 'w') as f:
         f.write(json.dumps(polygons))
     print("Polygon = %s" % str(polygons))
