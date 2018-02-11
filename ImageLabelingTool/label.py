@@ -81,35 +81,83 @@ class PolygonDrawer(object):
 
     
     def run(self):
-        i=0
+        i=1
         while(not self.dump):
             self.drawPoly()
             self.polygons.append(self.Polypoints)
             print("polygon #%d finished"%i)
-            #if(s pressed) dump=true
-            #tut padaet
-            rval=cv2.waitKey(1000) #needs be fixed
-            if (rval==ord('s')):
-                self.dump=True
-            elif(rval==ord('z')):
-                self.polygons = self.polygons[:-1]
-                self.img=self.orig.copy()
-                for poly in self.polygons:
-                    cv2.fillPoly(self.img, np.array([poly]), FINAL_LINE_COLOR)
+            i+=1
+            confirm=False
+            while (not confirm):
+                rval=cv2.waitKey(0) #needs be optimazid maybe in multithreading
+                if (rval==ord('c')):
+                    print("Confirmed")
+                    confirm=True
+                elif (rval==ord('s')):
+                    print("Saved")
+                    self.dump=True
+                    confirm=True
+                elif(rval==ord('z')):
+                    print("Canceled")
+                    i-=1
+                    #print("before")
+                    #print(len(self.polygons))
+                    self.polygons = self.polygons[:-1]
+                    #print("after")
+                    #print(len(self.polygons))
+                    self.img=self.orig.copy()
+                    for poly in self.polygons:
+                        cv2.fillPoly(self.img, np.array([poly]), FINAL_LINE_COLOR)
+                    cv2.imshow(self.window_name, self.img)
         return self.polygons
 
 # ============================================================================
 
-if __name__ == "__main__":
-    img=cv2.imread('1.jpg', 1)
-    polygons=[]
-    pd = PolygonDrawer("Polygon", img, polygons)
-    pd.run()
+
+def typeOfWork():
+    print("Type n for new work or c to continue work")
+    while True:
+        rval=input()
+        if rval=='n':
+            return True
+        elif rval=='c':
+            return False
+        else:
+            print("Invalid input.\nType n for new work or c to continue work")
     
-    cv2.destroyWindow(pd.window_name)
-    for poly in polygons:
-        cv2.fillPoly(img, np.array([poly]), FINAL_LINE_COLOR)
-    cv2.imwrite("polygon.png", img)
-    with open('coords.json', 'w') as f:
-        f.write(json.dumps(polygons))
-    print("Polygon = %s" % str(polygons))
+if __name__ == "__main__":
+
+    polygons=[]
+    
+if typeOfWork():
+    #code for new work
+    #for new picture we just take one argument - path to picture
+    #parse path and pass it to imread method
+    print("Print path to image file (includin file).\nEx.:/home/user/folder/image.jpg")
+    pathToImg=input()
+    #print(type(pathToImg))
+else:
+    #core for continueing work    
+    #for continue work we ask to arguments - path to picture and path to json file
+    #parse both paths, pass picture to imread method and draw all polygons
+    print("Print path to image file (includin file).\nEx.:/home/user/folder/image.jpg")
+    pathToImg=input()
+    print("Print path to json file (includin file).\nEx.:/home/user/folder/labels.json")
+    pathToJson=input()
+    #print(pathToJson)
+    polygons=json.load(open(pathToJson))
+    print (polygons)
+    
+    
+    
+img=cv2.imread(pathToImg, 1)
+pd = PolygonDrawer("Polygon", img, polygons)
+polygons=pd.run()
+    
+cv2.destroyWindow(pd.window_name)
+for poly in polygons:
+    cv2.fillPoly(img, np.array([poly]), FINAL_LINE_COLOR)
+cv2.imwrite("polygon.png", img)
+with open('coords.json', 'w') as f:
+    f.write(json.dumps(polygons))
+print("Polygon = %s" % str(polygons))
