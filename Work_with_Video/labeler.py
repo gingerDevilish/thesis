@@ -1,7 +1,6 @@
-from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Activation, Dropout, Flatten, Dense
-from keras.models import model_from_json
+#from keras.models import Sequential
+#from keras.layers import Conv2D, MaxPooling2D
+#from keras.layers import Activation, Dropout, Flatten, Dense
 from skimage.measure import compare_ssim
 from skimage.draw import polygon
 from scipy.spatial import distance
@@ -11,21 +10,20 @@ import json
 import cv2
 
 class PicLabeler:
-    def __init__(self, image, changes, config):
-    
-
-        self.image = image
+    def __init__(self, model, config):
+        self.model=model
         self.slots = config
-        self.changes = changes
-        self.blurAndGray()
-        
-        self.height, self.width = self.image.shape
-        
-        self.findSSIM()
+         #with open('model.json', 'r') as f:
+         #   self.model = model_from_json(f.read())
+        #self.model.load_weights('first_try.h5')
+        #self.mask = np.zeros(len(self.slots)) # will bw used instead ids and so on in run method
+
+       
         
         
         
     def blurAndGray(self):
+        #some problems with multithreading cv2
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.changes = cv2.cvtColor(self.changes, cv2.COLOR_BGR2GRAY)
         
@@ -72,13 +70,16 @@ class PicLabeler:
             #cv2.rectangle(imageA, (x, y), (x + w, y + h), (0, 0, 255), 2)
             #cv2.rectangle(imageB, (x, y), (x + w, y + h), (0, 0, 255), 2)
         
-        with open('model.json', 'r') as f:
-            self.model = model_from_json(f.read())
-        self.model.load_weights('first_try.h5')
-        self.mask = np.zeros(len(self.slots)) # will bw used instead ids and so on in run method
         
+    def run(self, image, changes):
         
-    def run(self):
+        self.image = image
+        self.changes = changes
+        self.blurAndGray()
+        
+        self.height, self.width = self.image.shape
+        
+        self.findSSIM()
         self.pts2 = np.float32([[0,60],[0,0],[40,0],[40,60]])
         slots = [] # list of preprocessed slot images
         ids = [] # list of slot ids
