@@ -1,6 +1,3 @@
-#from keras.models import Sequential
-#from keras.layers import Conv2D, MaxPooling2D
-#from keras.layers import Activation, Dropout, Flatten, Dense
 from skimage.measure import compare_ssim
 from skimage.draw import polygon
 from scipy.spatial import distance
@@ -13,14 +10,6 @@ class PicLabeler:
     def __init__(self, model, config):
         self.model=model
         self.slots = config
-         #with open('model.json', 'r') as f:
-         #   self.model = model_from_json(f.read())
-        #self.model.load_weights('first_try.h5')
-        #self.mask = np.zeros(len(self.slots)) # will bw used instead ids and so on in run method
-
-       
-        
-        
         
     def blurAndGray(self):
         #some problems with multithreading cv2
@@ -31,7 +20,6 @@ class PicLabeler:
         self.changes=cv2.medianBlur(self.changes,7)
         self.image = cv2.GaussianBlur(self.image,(13,13),0)
         self.changes = cv2.GaussianBlur(self.changes,(13,13),0)
-        
         
     def findSSIM(self):
         (score, diff) = compare_ssim(self.image, self.changes, gaussian_weights=True, full=True)
