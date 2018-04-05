@@ -18,6 +18,9 @@ class PolygonDrawer(object):
         self.img=pic.copy()
         self.orig=pic.copy()
         self.polygons=polygons
+        if len(self.polygons)>0:
+            for poly in polygons:
+                cv2.fillPoly(self.img, np.array([poly]), FINAL_LINE_COLOR)
         
     def on_mouse(self, event, x, y, buttons, user_param):
         # Mouse callback that gets called for every mouse event (i.e. moving, clicking, etc.)
