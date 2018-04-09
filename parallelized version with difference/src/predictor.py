@@ -7,7 +7,10 @@ from keras.models import load_model
 
 from src.labeler import PicLabeler
 
-def run_predictor(model_file: Path, config_file: Path, images_queue: Queue, predictions_queue: Queue):
+def run_predictor(model_file: Path,
+                  config_file: Path,
+                  images_queue: Queue,
+                  predictions_queue: Queue):
     # TODO check paths before
 
     model = load_model(str(model_file))
@@ -18,12 +21,11 @@ def run_predictor(model_file: Path, config_file: Path, images_queue: Queue, pred
     labeler = PicLabeler(model, config)
 
     while True:
-        #imageA, imageB = None, None
-        imageA, imageB = images_queue.get()
+        image_prev, image_cur = images_queue.get()
 
-        if imageA is None or imageB is None:
+        if image_prev is None or image_cur is None:
             sleep(1)
             continue
 
-        result = labeler.run(imageA, imageB)
+        result = labeler.run(image_prev, image_cur)
         predictions_queue.put(result)

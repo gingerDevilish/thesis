@@ -1,25 +1,23 @@
 from multiprocessing import Process, Queue
 from time import sleep
+from pathlib import Path
 
 from src.predictor import run_predictor
 from src.stream import run_stream
-
-from pathlib import Path
 
 
 def main():
     images_queue = Queue(1)
     predictions_queue = Queue(1)
 
-    # run_predictor(model_file: Path, config_file: Path, images_queue: Queue, predictions_queue: Queue)
-    # run_stream(video_path: Path, config_file: Path, images_queue: Queue, predictions_queue: Queue):
-
     model_path = Path('model')
     video_path = Path('pltd.mp4')
     config_path = Path('coords.json')
 
-    predictor_p = Process(target=run_predictor, args=(model_path, config_path, images_queue, predictions_queue))
-    stream_p = Process(target=run_stream, args=(video_path, config_path, images_queue, predictions_queue))
+    predictor_p = Process(target=run_predictor,
+                          args=(model_path, config_path, images_queue, predictions_queue))
+    stream_p = Process(target=run_stream,
+                       args=(video_path, config_path, images_queue, predictions_queue))
 
     predictor_p.start()
     stream_p.start()
