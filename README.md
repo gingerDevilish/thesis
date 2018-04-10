@@ -1,1 +1,1 @@
-parking lot occupancy detection system.
+Parking lot occupancy detection system.
