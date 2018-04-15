@@ -1,4 +1,5 @@
 import json
+import datetime
 from multiprocessing import Queue
 from pathlib import Path
 from time import sleep
@@ -15,7 +16,7 @@ def run_predictor(model_file: Path,
     # TODO check paths before
 
     model = load_model(str(model_file))
-
+    dateFormat="%Y-%m-%d %H:%M:%S"
     with config_file.open() as file:
         config = json.load(file)
 
@@ -29,4 +30,6 @@ def run_predictor(model_file: Path,
             continue
 
         result = labeler.run(image_cur)
+        with open('log/%s.json'%(datetime.datetime.now().strftime(dateFormat)), 'w') as f:
+            f.write(json.dumps(result))
         predictions_queue.put(result)

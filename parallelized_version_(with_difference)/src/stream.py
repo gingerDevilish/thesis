@@ -31,12 +31,7 @@ def run_stream(video_path: Path, config_file: Path, images_queue: Queue, predict
 
     images_queue.put((image_prev, image_cur))
 
-    start_predictions = Path("old.json")
-
-    with start_predictions.open() as file:
-        prediction = json.load(file)
-
-    prediction = {int(k): v for (k, v) in prediction.items()}
+    prediction = dict(zip(range(1, len(config)+1), ["Occupied"]*len(config)))
 
     while capture.isOpened():
 

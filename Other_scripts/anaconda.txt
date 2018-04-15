@@ -1,0 +1,15 @@
+wget https://repo.continuum.io/archive/Anaconda3-5.1.0-Linux-x86_64.sh
+bash Anaconda3-5.1.0-Linux-x86_64.sh
+conda create -n thesis anaconda
+source activate thesis
+conda install -n thesis numpy
+
+pip install imutils
+pip install opencv-contrib-python
+conda install -c conda-forge keras
+
+# bug fix with teano https://stackoverflow.com/questions/43327464/how-to-make-keras-use-tensorflow-backend-in-anaconda
+
+conda install -c conda-forge tensorflow
+conda install -c anaconda scikit-learn
+conda install -c anaconda scipy
