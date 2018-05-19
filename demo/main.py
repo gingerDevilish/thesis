@@ -10,7 +10,7 @@ def main():
     images_queue = Queue(1)
     predictions_queue = Queue(1)
 
-    model_path = Path('model.pkl')
+    model_path = Path('their_model.pkl')
     video_path = Path('pltd.mp4')
     config_path = Path('coords.json')
 

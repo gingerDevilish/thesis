@@ -3,6 +3,7 @@ from scipy.spatial import distance
 import numpy as np
 import cv2
 from skimage.feature import hog
+from skimage.transform import resize
 
 class PicLabeler:
     def __init__(self, model, config):
@@ -50,7 +51,7 @@ class PicLabeler:
         # Verbosity mode: 1 = progress bar
         #pred = self.model.predict(np.array(slots), 16, 1)
 
-        hogs = np.array([hog(x.reshape((40, 60))) for x in slots])
+        hogs = np.stack([hog(x.reshape((40, 60)), block_norm="L2-Hys") for x in slots])
         pred = self.model.predict(hogs)
 
         # construct a JSON entity with results

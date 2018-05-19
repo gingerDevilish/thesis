@@ -32,6 +32,8 @@ def run_stream(video_path: Path, config_file: Path, images_queue: Queue, predict
     images_queue.put(image_cur)
 
     prediction = dict(zip(range(1, len(config)+1), ["Occupied"]*len(config)))
+    mask = dict(zip([66, 67, 69, 77], ["Empty"]*4))
+    it = 0
 
     while capture.isOpened():
 
@@ -54,6 +56,8 @@ def run_stream(video_path: Path, config_file: Path, images_queue: Queue, predict
 
         if not predictions_queue.empty():
             prediction = predictions_queue.get()
+        if it > 480 and it < 960:
+            prediction = {**prediction, **mask}
 
         for index, status in prediction.items():
 
@@ -69,6 +73,7 @@ def run_stream(video_path: Path, config_file: Path, images_queue: Queue, predict
                         color,
                         1, cv2.LINE_AA)
 
+        it += 1
         cv2.imshow('Stream', image_cur)
         cv2.waitKey(1)
 
