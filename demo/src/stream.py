@@ -10,6 +10,7 @@ import numpy as np
 
 RED_COLOR = (0, 0, 255)
 GREEN_COLOR = (0, 255, 0)
+BLUE_COLOR = (255, 0, 0)
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 def read_image(capture):
@@ -56,7 +57,7 @@ def run_stream(video_path: Path, config_file: Path, images_queue: Queue, predict
 
         for index, status in prediction.items():
 
-            color = RED_COLOR if status == 'Occupied' else GREEN_COLOR
+            color = RED_COLOR if status == 'Occupied' else (GREEN_COLOR if status=='Empty' else BLUE_COLOR)
             coordinates = np.array(config[int(index) - 1], np.int32).reshape((-1, 1, 2))
 
             cv2.polylines(image_cur, [coordinates], True, color)

@@ -4,8 +4,8 @@ from multiprocessing import Queue
 from pathlib import Path
 from time import sleep
 
-from keras.models import load_model
-
+#from keras.models import load_model
+from sklearn.externals import joblib
 from src.labeler import PicLabeler
 
 
@@ -15,7 +15,8 @@ def run_predictor(model_file: Path,
                   predictions_queue: Queue):
     # TODO check paths before
 
-    model = load_model(str(model_file))
+    #model = load_model(str(model_file))
+    model = joblib.load(str(model_file))
     dateFormat="%Y-%m-%d %H:%M:%S"
     with config_file.open() as file:
         config = json.load(file)

@@ -2,7 +2,7 @@ from skimage.draw import polygon
 from scipy.spatial import distance
 import numpy as np
 import cv2
-
+from skimage.feature import hog
 
 class PicLabeler:
     def __init__(self, model, config):
@@ -45,14 +45,18 @@ class PicLabeler:
         if not slots:
             print("answer empty")
             return answer
+
         # batch_size = 16
         # Verbosity mode: 1 = progress bar
-        pred = self.model.predict(np.array(slots), 16, 1)
+        #pred = self.model.predict(np.array(slots), 16, 1)
+
+        hogs = np.array([hog(x.reshape((40, 60))) for x in slots])
+        pred = self.model.predict(hogs)
 
         # construct a JSON entity with results
         pred = pred.ravel().tolist()
         for i, one_id in enumerate(ids):
-            answer[one_id] = 'Occupied' if pred[i] else 'Empty'
+            answer[one_id] = 'Occupied' if pred[i]==1 else ('Empty' if not pred[i] else str(pred[i]))
         return answer
 
     def process_slot(self, space):
